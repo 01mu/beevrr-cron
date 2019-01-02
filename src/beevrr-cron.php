@@ -4,7 +4,7 @@
  * github.com/01mu
  */
 
-class BeevrCron
+class beevr_cron
 {
     private $conn;
 
@@ -12,7 +12,7 @@ class BeevrCron
     {
         try
         {
-            $conn = new PDO("mysql:host=$server;dbname=$db", $user, $pw);
+            $conn = new PDO("pgsql:host=$server;dbname=$db", $user, $pw);
             $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
         }
         catch(PDOException $e)
@@ -25,16 +25,9 @@ class BeevrCron
 
     public function update()
     {
-        try
-        {
-            $sql = 'SELECT * FROM discussions';
-            $stmt = $this->conn->query($sql);
-            $results = $stmt->fetchAll();
-        }
-        catch(PDOException $e)
-        {
-            echo "Error: " . $e->getMessage();
-        }
+        $sql = 'SELECT * FROM discussions';
+        $stmt = $this->conn->query($sql);
+        $results = $stmt->fetchAll();
 
         foreach($results as $result)
         {
@@ -59,23 +52,17 @@ class BeevrCron
                     $to_finished = true;
                     break;
                 default:
-                    continue;
+                    $next = 0;
+                    $ph = 'done';
                     break;
             }
 
-            if(time() >= $next)
+            if(time() >= $next && $ph != 'done')
             {
-                try
-                {
-                    $sql = 'UPDATE discussions SET current_phase = ?
-                        WHERE id = ?';
-                    $stmt = $this->conn->prepare($sql);
-                    $stmt->execute([$ph, $id]);
-                }
-                catch(PDOException $e)
-                {
-                    echo "Error: " . $e->getMessage();
-                }
+                $sql = 'UPDATE discussions SET current_phase = ?
+                    WHERE id = ?';
+                $stmt = $this->conn->prepare($sql);
+                $stmt->execute([$ph, $id]);
 
                 $str = 'proposition "' . $id . '" changed to ' . '"' .
                     $ph . '"';
@@ -85,52 +72,101 @@ class BeevrCron
 
             if($to_finished)
             {
-                $for_change = $result['for_change'];
-                $aga_change = $result['against_change'];
-
-                if($for_change > $aga_change)
-                {
-                    $winner = 'for';
-                }
-                else if($for_change < $aga_change)
-                {
-                    $winner = 'against';
-                }
-                else
-                {
-                    $winner = 'draw';
-                }
-
-                try
-                {
-                    $sql = 'UPDATE discussions SET winner = ? WHERE id = ?';
-                    $stmt = $this->conn->prepare($sql);
-                    $stmt->execute([$winner, $id]);
-                }
-                catch(PDOException $e)
-                {
-                    echo "Error: " . $e->getMessage();
-                }
-
-                $str = 'winner set for proposition "' . $id .
-                    '" "' . $winner . '"';
-
-                $this->update_log($str);
+                $this->update_winner($result, $id);
+                $this->update_activities($id);
+                $this->update_active_votes($id);
+                $this->update_active_responses($id);
+                $this->update_active_discussions($id);
             }
         }
     }
 
+    private function update_activities($disc_id)
+    {
+        $sql = 'UPDATE activities SET is_active = 0 WHERE proposition = ?';
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute([$disc_id]);
+    }
+
+    private function update_active_votes($disc_id)
+    {
+        $sql = 'SELECT user_id FROM votes WHERE proposition = ?';
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute([$disc_id]);
+        $results = $stmt->fetchAll();
+
+        foreach($results as $result)
+        {
+            $sql = 'UPDATE users SET active_votes = active_votes - 1 ' .
+                'WHERE id = ?';
+            $stmt = $this->conn->prepare($sql);
+            $stmt->execute([$result['user_id']]);
+        }
+    }
+
+    private function update_active_responses($disc_id)
+    {
+        $sql = 'SELECT user_id FROM responses WHERE proposition = ?';
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute([$disc_id]);
+        $results = $stmt->fetchAll();
+
+        foreach($results as $result)
+        {
+            $sql = 'UPDATE users SET active_responses = active_responses - 1 ' .
+                'WHERE id = ?';
+            $stmt = $this->conn->prepare($sql);
+            $stmt->execute([$result['user_id']]);
+        }
+    }
+
+    private function update_active_discussions($disc_id)
+    {
+        $sql = 'SELECT user_id FROM discussions WHERE id = ?';
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute([$disc_id]);
+        $results = $stmt->fetchAll();
+
+        foreach($results as $result)
+        {
+            $sql = 'UPDATE users SET active_discussions = ' .
+                'active_discussions - 1 WHERE id = ?';
+            $stmt = $this->conn->prepare($sql);
+            $stmt->execute([$result['user_id']]);
+        }
+    }
+
+    private function update_winner($result, $id)
+    {
+        $for_change = $result['for_change'];
+        $aga_change = $result['against_change'];
+
+        if($for_change > $aga_change)
+        {
+            $winner = 'for';
+        }
+        else if($for_change < $aga_change)
+        {
+            $winner = 'against';
+        }
+        else
+        {
+            $winner = 'draw';
+        }
+
+        $sql = 'UPDATE discussions SET winner = ? WHERE id = ?';
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute([$winner, $id]);
+
+        $str = 'winner set for proposition "' . $id . '" "' . $winner . '"';
+
+        $this->update_log($str);
+    }
+
     private function update_log($msg)
     {
-        try
-        {
-            $sql = 'INSERT INTO update_log (action, date) VALUES (?, ?)';
-            $stmt = $this->conn->prepare($sql);
-            $stmt->execute([$msg, date('l jS \of F Y h:i:s A')]);
-        }
-        catch(PDOException $e)
-        {
-            echo "Error: " . $e->getMessage();
-        }
+        $sql = 'INSERT INTO update_log (action, date) VALUES (?, ?)';
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute([$msg, date('l jS \of F Y h:i:s A')]);
     }
 }

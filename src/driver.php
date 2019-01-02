@@ -11,7 +11,6 @@ $user = '';
 $pw = '';
 $db = '';
 
-$beevr_cron = new BeevrCron();
-
+$beevr_cron = new beevr_cron();
 $beevr_cron->conn($server, $user, $pw, $db);
 $beevr_cron->update();
