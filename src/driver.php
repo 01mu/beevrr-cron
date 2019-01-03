@@ -11,6 +11,18 @@ $user = '';
 $pw = '';
 $db = '';
 
-$beevr_cron = new beevr_cron();
-$beevr_cron->conn($server, $user, $pw, $db);
-$beevr_cron->update();
+$beevrr_cron = new beevr_cron();
+$beevrr_cron->conn($server, $user, $pw, $db);
+
+if($argv[1] === 'clear-tables')
+{
+    $beevrr_cron->clear_tables();
+}
+else if($argv[1] === 'drop-tables')
+{
+    $beevrr_cron->drop_tables();
+}
+else
+{
+    $beevrr_cron->update();
+}

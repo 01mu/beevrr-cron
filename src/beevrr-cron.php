@@ -169,4 +169,37 @@ class beevr_cron
         $stmt = $this->conn->prepare($sql);
         $stmt->execute([$msg, date('l jS \of F Y h:i:s A')]);
     }
+
+    public function clear_tables()
+    {
+        $cmds = ['DELETE FROM users',
+            'DELETE FROM discussions',
+            'DELETE FROM votes',
+            'DELETE FROM activities',
+            'DELETE FROM responses',
+            'DELETE FROM ztext',
+            'DELETE FROM update_log'];
+
+        foreach($cmds as $cmd)
+        {
+            $this->conn->query($cmd);
+        }
+    }
+
+    public function drop_tables()
+    {
+        $cmds = ['DROP TABLE users',
+            'DROP TABLE discussions',
+            'DROP TABLE votes',
+            'DROP TABLE activities',
+            'DROP TABLE responses',
+            'DROP TABLE ztext',
+            'DROP TABLE update_log',
+            'DROP TABLE migrations'];
+
+        foreach($cmds as $cmd)
+        {
+            $this->conn->query($cmd);
+        }
+    }
 }
