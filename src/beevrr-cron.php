@@ -25,7 +25,7 @@ class beevr_cron
 
     public function update()
     {
-        $sql = 'SELECT * FROM discussions';
+        $sql = "SELECT * FROM discussions WHERE current_phase != 'finished'";
         $stmt = $this->conn->query($sql);
         $results = $stmt->fetchAll();
 
@@ -46,21 +46,15 @@ class beevr_cron
                     $next = $result['a_end_date'];
                     $ph = 'post-argument';
                     break;
-                case 'post-argument':
+                default:
                     $next = $result['v_end_date'];
                     $ph = 'finished';
-                    $to_finished = true;
-                    break;
-                default:
-                    $next = 0;
-                    $ph = 'done';
                     break;
             }
 
-            if(time() >= $next && $ph != 'done')
+            if(time() >= $next)
             {
-                $sql = 'UPDATE discussions SET current_phase = ?
-                    WHERE id = ?';
+                $sql = 'UPDATE discussions SET current_phase = ? WHERE id = ?';
                 $stmt = $this->conn->prepare($sql);
                 $stmt->execute([$ph, $id]);
 
@@ -68,15 +62,15 @@ class beevr_cron
                     $ph . '"';
 
                 $this->update_log($str);
-            }
 
-            if($to_finished)
-            {
-                $this->update_winner($result, $id);
-                $this->update_activities($id);
-                $this->update_active_votes($id);
-                $this->update_active_responses($id);
-                $this->update_active_discussions($id);
+                if($ph === 'finished')
+                {
+                    $this->update_winner($result, $id);
+                    $this->update_activities($id);
+                    $this->update_active_votes($id);
+                    $this->update_active_responses($id);
+                    $this->update_active_discussions($id);
+                }
             }
         }
     }
