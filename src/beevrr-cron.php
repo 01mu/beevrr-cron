@@ -171,6 +171,8 @@ class beevr_cron
             'DELETE FROM votes',
             'DELETE FROM activities',
             'DELETE FROM responses',
+            'DELETE FROM likes_disc' ,
+            'DELETE FROM likes_resp' ,
             'DELETE FROM ztext',
             'DELETE FROM update_log'];
 
@@ -187,6 +189,8 @@ class beevr_cron
             'DROP TABLE votes',
             'DROP TABLE activities',
             'DROP TABLE responses',
+            'DROP TABLE likes_disc' ,
+            'DROP TABLE likes_resp' ,
             'DROP TABLE ztext',
             'DROP TABLE update_log',
             'DROP TABLE migrations'];
