@@ -173,6 +173,11 @@ class beevr_cron
             'DELETE FROM responses',
             'DELETE FROM likes_disc' ,
             'DELETE FROM likes_resp' ,
+            'DELETE FROM oauth_access_tokens' ,
+            'DELETE FROM oauth_auth_codes' ,
+            'DELETE FROM oauth_clients' ,
+            'DELETE FROM oauth_personal_access_clients' ,
+            'DELETE FROM oauth_refresh_tokens' ,
             'DELETE FROM ztext',
             'DELETE FROM update_log'];
 
@@ -192,6 +197,11 @@ class beevr_cron
             'DROP TABLE likes_disc' ,
             'DROP TABLE likes_resp' ,
             'DROP TABLE ztext',
+            'DROP TABLE oauth_access_tokens' ,
+            'DROP TABLE oauth_auth_codes' ,
+            'DROP TABLE oauth_clients' ,
+            'DROP TABLE oauth_personal_access_clients' ,
+            'DROP TABLE oauth_refresh_tokens' ,
             'DROP TABLE update_log',
             'DROP TABLE migrations'];
 
