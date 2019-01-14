@@ -7,6 +7,10 @@
 class beevr_cron
 {
     private $conn;
+    private $tables = ['users', 'discussions', 'votes', 'activities',
+        'responses', 'likes_disc', 'likes_resp', /*'oauth_access_tokens',
+        'oauth_auth_codes', 'oauth_clients', 'oauth_personal_access_clients',
+        'oauth_refresh_tokens',*/ 'migrations', 'ztext', 'update_log'];
 
     public function conn($server, $user, $pw, $db)
     {
@@ -166,48 +170,17 @@ class beevr_cron
 
     public function clear_tables()
     {
-        $cmds = ['DELETE FROM users',
-            'DELETE FROM discussions',
-            'DELETE FROM votes',
-            'DELETE FROM activities',
-            'DELETE FROM responses',
-            'DELETE FROM likes_disc' ,
-            'DELETE FROM likes_resp' ,
-            'DELETE FROM oauth_access_tokens' ,
-            'DELETE FROM oauth_auth_codes' ,
-            'DELETE FROM oauth_clients' ,
-            'DELETE FROM oauth_personal_access_clients' ,
-            'DELETE FROM oauth_refresh_tokens' ,
-            'DELETE FROM ztext',
-            'DELETE FROM update_log'];
-
-        foreach($cmds as $cmd)
+        foreach($this->tables as $table)
         {
-            $this->conn->query($cmd);
+            $this->conn->query('DELETE FROM ' . $table);
         }
     }
 
     public function drop_tables()
     {
-        $cmds = ['DROP TABLE users',
-            'DROP TABLE discussions',
-            'DROP TABLE votes',
-            'DROP TABLE activities',
-            'DROP TABLE responses',
-            'DROP TABLE likes_disc' ,
-            'DROP TABLE likes_resp' ,
-            'DROP TABLE ztext',
-            'DROP TABLE oauth_access_tokens' ,
-            'DROP TABLE oauth_auth_codes' ,
-            'DROP TABLE oauth_clients' ,
-            'DROP TABLE oauth_personal_access_clients' ,
-            'DROP TABLE oauth_refresh_tokens' ,
-            'DROP TABLE update_log',
-            'DROP TABLE migrations'];
-
-        foreach($cmds as $cmd)
+        foreach($this->tables as $table)
         {
-            $this->conn->query($cmd);
+            $this->conn->query('DROP TABLE ' . $table);
         }
     }
 }
